@@ -69,6 +69,12 @@ export async function createMessage(message: string): Promise<Message> {
   });
 }
 
+export async function deleteMessage(id: number): Promise<{ deleted: boolean; id: number }> {
+  return request(`/messages/${id}`, {
+    method: "DELETE",
+  });
+}
+
 export async function healthCheck(): Promise<{ status: string; message: string }> {
   return request("/", { requireAuth: false });
 }

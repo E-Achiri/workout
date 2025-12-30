@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -100,3 +100,22 @@ def get_messages(current_user: User = Depends(get_current_user)):
             for row in rows
         ]
     }
+
+
+@app.delete("/messages/{message_id}")
+def delete_message(
+    message_id: int,
+    current_user: User = Depends(get_current_user)
+):
+    """Delete a message by ID (only if owned by current user)."""
+    with get_cursor() as cursor:
+        cursor.execute(
+            "DELETE FROM messages WHERE id = %s AND user_id = %s RETURNING id",
+            (message_id, current_user.id)
+        )
+        row = cursor.fetchone()
+
+    if not row:
+        raise HTTPException(status_code=404, detail="Message not found")
+
+    return {"deleted": True, "id": message_id}
